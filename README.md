@@ -1,33 +1,35 @@
-Hệ thống phân tích CV tự động kết hợp XGBoost + SHAP để đánh giá mức độ phù hợp của ứng viên và trả về feedback có thể giải thích được (Explainable AI).
----
-
-1) Yêu cầu cài đặt
+# Hệ thống phân tích CV tự động kết hợp XGBoost + SHAP để đánh giá mức độ phù hợp của ứng viên và trả về feedback có thể giải thích được (Explainable AI)
+<pre>
+1. Yêu cầu cài đặt
 pip install fastapi uvicorn flask flask-cors joblib numpy shap xgboost scikit-learn
 
-2) Khởi động – 3 Terminal
-- Terminal 1:
+2. Khởi động – 3 Terminal
+
+Terminal 1
 cd "Đường dẫn file"
 python3 server.py
 
-- Terminal 2:
+Terminal 2
 cd "Đường dẫn file"
 python3 backend.py
 
-- Terminal 3:
+Terminal 3
 cd "Đường dẫn file"
 python3 -m http.server 5500
 
-Mở web tại http://127.0.0.1:5500/index.html
-
-3) 🗂️ Cấu trúc dự án
+Mở web tại:
+http://127.0.0.1:5500/index.html
+</pre>
+<pre>
+3. Cấu trúc dự án
 
 fixed 7/
 ├── index.html                        # Entry point – frontend single-page app
 ├── app.js                            # Controller chính, quản lý AppState & điều hướng màn hình
 ├── styles.css                        # Global CSS
 │
-├── backend.py                        # ⚙️  FastAPI – AI engine chính (XGBoost + SHAP)
-├── server.py                         # ⚙️  Flask – server phụ (lưu CV JSON, tiền xử lý TF-IDF)
+├── backend.py                        # FastAPI – AI engine chính (XGBoost + SHAP)
+├── server.py                         # Flask – server phụ (lưu CV JSON, tiền xử lý TF-IDF)
 │
 ├── components/
 │   ├── Screen1_Transparency.js       # Màn 1: Consent & thông tin minh bạch
@@ -61,11 +63,9 @@ fixed 7/
 ├── dataset 1 ana.py                  # Script EDA / phân tích dataset
 │
 └── output/                           # CV JSON được lưu sau mỗi lần phân tích
-```
-
----
-
-4) Flow
+</pre>
+<pre>
+4. Flow
 [Screen 1] Ứng viên đồng ý điều khoản minh bạch
      ↓
 [Screen 2] Upload PDF → pdf.js đọc text → Claude AI extract
@@ -75,7 +75,7 @@ fixed 7/
            • TF-IDF vectorize text
            • XGBoost dự đoán match score
            • SHAP TreeExplainer giải thích top features
-           • build_human_feedback() 
+           • build_human_feedback()
      ↓
 [Screen 4] Hiển thị kết quả:
            • Match score (gauge)
@@ -84,13 +84,11 @@ fixed 7/
            • SHAP base score
      ↓
 [Screen 5] Khảo sát: Candidate đánh giá trải nghiệm
+</pre>
+<pre>
+5. Chi tiết Screen 4
 
-
----
-
-5) Chi tiết Screen 4
-
-`backend.py` sử dụng `shap.TreeExplainer` để giải thích từng dự đoán:
+backend.py sử dụng shap.TreeExplainer để giải thích từng dự đoán:
 
 explainer = shap.TreeExplainer(model)         # khởi tạo 1 lần
 shap_values = explainer(input_data_dense)     # tính SHAP values
@@ -103,25 +101,24 @@ positives = sorted([x for x in impacts if x['impact'] > 0],
 negatives = sorted([x for x in impacts if x['impact'] < 0],
                    key=lambda x: x['impact'])[:3]
 
+Kết quả SHAP được build_human_feedback() dịch sang ngôn ngữ tự nhiên (tiếng Việt), lọc bỏ các demographic features (Gender_*, Race_*, Age_Scaled) để đảm bảo fairness.
 
-Kết quả SHAP được `build_human_feedback()` dịch sang ngôn ngữ tự nhiên (tiếng Việt), lọc bỏ các demographic features (`Gender_*`, `Race_*`, `Age_Scaled`) để đảm bảo fairness.
+Screen4_Results.js nhận object analysisResult từ AppState và render:
+- strengths → list ✓ màu xanh
+- developmentAreas → list màu đỏ
+- explanation.base_score → SHAP base score của XGBoost
+</pre>
+<pre>
+6. Output
 
-Screen 4 (`Screen4_Results.js`) nhận object `analysisResult` từ AppState và render:
-- `strengths` → list ✓ màu xanh
-- `developmentAreas` → list → màu đỏ  
-- `explanation.base_score` → SHAP base score của XGBoost
-
-
-6) 📁 Output
-
-Mỗi lần phân tích CV, file JSON được lưu tại `output/`:
-```
+Mỗi lần phân tích CV, file JSON được lưu tại output/:
 output/cv_<TenUngVien>_<YYYYMMDD_HHMMSS>.json
-```
 
-7)📝 Notes
+7. Notes
 
-- Model được train trên `dataset1_.csv` bằng `Modelxgb.py`
-- `feature_names_fair.pkl` đã loại bỏ demographic features khỏi TF-IDF pool (dùng cho `backend.py`)
-- `feature_names_full.pkl` giữ toàn bộ features (dùng cho `server.py`)
-- SHAP chỉ chạy trên `backend.py` (FastAPI); `server.py` (Flask) không dùng SHAP
+- Model được train trên dataset1_.csv bằng Modelxgb.py
+- feature_names_fair.pkl đã loại bỏ demographic features khỏi TF-IDF pool (dùng cho backend.py)
+- feature_names_full.pkl giữ toàn bộ features (dùng cho server.py)
+- SHAP chỉ chạy trên backend.py (FastAPI)
+- server.py (Flask) không dùng SHAP
+<pre>
